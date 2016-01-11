@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+<title>Loading and preprocessing the data</title>
+
+<script type="text/javascript">
+window.onload = function() {
+  var imgs = document.getElementsByTagName('img'), i, img;
+  for (i = 0; i < imgs.length; i++) {
+    img = imgs[i];
+    // center an image if it is the only element of its parent
+    if (img.parentElement.childElementCount === 1)
+      img.parentElement.style.textAlign = 'center';
+  }
+};
+</script>
+
+
+
+
+
+<style type="text/css">
+body, td {
+   font-family: sans-serif;
+   background-color: white;
+   font-size: 13px;
+}
+
+body {
+  max-width: 800px;
+  margin: auto;
+  padding: 1em;
+  line-height: 20px;
+}
+
+tt, code, pre {
+   font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace;
+}
+
+h1 {
+   font-size:2.2em;
+}
+
+h2 {
+   font-size:1.8em;
+}
+
+h3 {
+   font-size:1.4em;
+}
+
+h4 {
+   font-size:1.0em;
+}
+
+h5 {
+   font-size:0.9em;
+}
+
+h6 {
+   font-size:0.8em;
+}
+
+a:visited {
+   color: rgb(50%, 0%, 50%);
+}
+
+pre, img {
+  max-width: 100%;
+}
+pre {
+  overflow-x: auto;
+}
+pre code {
+   display: block; padding: 0.5em;
+}
+
+code {
+  font-size: 92%;
+  border: 1px solid #ccc;
+}
+
+code[class] {
+  background-color: #F8F8F8;
+}
+
+table, td, th {
+  border: none;
+}
+
+blockquote {
+   color:#666666;
+   margin:0;
+   padding-left: 1em;
+   border-left: 0.5em #EEE solid;
+}
+
+hr {
+   height: 0px;
+   border-bottom: none;
+   border-top-width: thin;
+   border-top-style: dotted;
+   border-top-color: #999999;
+}
+
+@media print {
+   * {
+      background: transparent !important;
+      color: black !important;
+      filter:none !important;
+      -ms-filter: none !important;
+   }
+
+   body {
+      font-size:12pt;
+      max-width:100%;
+   }
+
+   a, a:visited {
+      text-decoration: underline;
+   }
+
+   hr {
+      visibility: hidden;
+      page-break-before: always;
+   }
+
+   pre, blockquote {
+      padding-right: 1em;
+      page-break-inside: avoid;
+   }
+
+   tr, img {
+      page-break-inside: avoid;
+   }
+
+   img {
+      max-width: 100% !important;
+   }
+
+   @page :left {
+      margin: 15mm 20mm 15mm 10mm;
+   }
+
+   @page :right {
+      margin: 15mm 10mm 15mm 20mm;
+   }
+
+   p, h2, h3 {
+      orphans: 3; widows: 3;
+   }
+
+   h2, h3 {
+      page-break-after: avoid;
+   }
+}
+</style>
+
+
+
+</head>
+
+<body>
+<h2>Loading and preprocessing the data</h2>
+
+<p>## 1. Load the data (i.e. read.csv())
+   ## 2. Process/transform the data (if necessary) into a format suitable for your analysis</p>
+
+<p>unzip(zipfile=&ldquo;activity.zip&rdquo;)
+data &lt;- read.csv(&ldquo;activity.csv&rdquo;)</p>
+
+<h2>What is mean total number of steps taken per day?</h2>
+
+<h2>1. Make a histogram of the total number of steps taken each day</h2>
+
+<p>library(ggplot2)
+total &lt;- tapply(data$steps, data$date, FUN=sum, na.rm=TRUE)
+qplot(total, binwidth=1200, xlab=&ldquo;Total number of steps taken / Day&rdquo;)</p>
+
+<h2>2. Calculate and report the mean and median total number of steps taken per day</h2>
+
+<p>mean(total, na.rm=TRUE)
+median(total, na.rm=TRUE)</p>
+
+<h2>What is the average daily activity pattern?</h2>
+
+<h2>1. Make a time series plot (i.e. type = &ldquo;l&rdquo;) of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)</h2>
+
+<p>average &lt;- aggregate(x=list(steps=data$steps), by=list(interval=data$interval),
+                      FUN=mean, na.rm=TRUE)
+ggplot(data=average, aes(x=interval, y=steps)) +
+      geom_line() +
+      xlab(&ldquo;5-minute interval&rdquo;) +
+      ylab(&ldquo;Average number of steps taken&rdquo;)</p>
+
+<p>##2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?</p>
+
+<p>average[which.max(average$steps),]</p>
+
+<h2>Imputing missing values</h2>
+
+<h2>1. Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs)</h2>
+
+<p>missing &lt;- is.na(data$steps)
+sum(missing)</p>
+
+<h2>2. Devise a strategy for filling in all of the missing values in the dataset by the mean for that 5-minute interval.</h2>
+
+<p>NAfill &lt;- function(steps, interval) {
+    addval &lt;- NA
+    if (!is.na(steps))
+        addval &lt;- c(steps)
+    else
+        addval &lt;- (average[average$interval==interval, &ldquo;steps&rdquo;])
+    return(addval)
+}</p>
+
+<h2>3. Create a new dataset that is equal to the original dataset but with the missing data addval in.</h2>
+
+<p>data2 &lt;- data
+data2$steps &lt;- mapply(NAfill, data2$steps, data2$interval)</p>
+
+<h2>4. Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?</h2>
+
+<p>total2 &lt;- tapply(data2$steps, data2$date, FUN=sum)
+qplot(total2, binwidth=1200, xlab=&ldquo;Total number of steps taken / Day&rdquo;)
+mean(total2)
+median(total2)</p>
+
+<h2>Are there differences in activity patterns between weekdays and weekends?</h2>
+
+<h2>1. Create a new factor variable in the dataset with two levels &ndash; &ldquo;weekday&rdquo; and &ldquo;weekend&rdquo; indicating whether a given date is a weekday or weekend day.</h2>
+
+<p>weekDE &lt;- function(date) {
+    day &lt;- weekdays(date)
+    if (day %in% c(&ldquo;Monday&rdquo;, &ldquo;Tuesday&rdquo;, &ldquo;Wednesday&rdquo;, &ldquo;Thursday&rdquo;, &ldquo;Friday&rdquo;))
+        return(&ldquo;weekday&rdquo;)
+    else return(&ldquo;weekend&rdquo;)<br/>
+    }
+data2$date &lt;- as.Date(data2$date)
+data2$day &lt;- sapply(data2$date, FUN=weekDE)</p>
+
+<h2>2. Make a panel plot containing a time series plot (i.e. type = &ldquo;l&rdquo;) of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). The plot should look something like the following, which was created using simulated data:</h2>
+
+<p>ggplot(aggregate(steps ~ interval + day, data=data2, mean), aes(interval, steps)) +
+      geom_line() + facet_grid(day ~ .) +
+      xlab(&ldquo;5-minute interval&rdquo;) + ylab(&ldquo;Number of steps&rdquo;)</p>
+
+</body>
+
+</html>
